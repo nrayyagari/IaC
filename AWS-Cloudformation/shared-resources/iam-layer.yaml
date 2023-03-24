@@ -1,0 +1,196 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: Creates IAM Groups
+Metadata:
+  Stack: 0
+  VersionDate: 2017-05-13
+
+Resources:
+  OpsGroup:
+    Type: AWS::IAM::Group
+    Properties:
+      GroupName: OpsGroup
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/AWSSupportAccess
+      Path: /
+      Policies:
+        - PolicyName: OperationsAccess
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - NotAction:
+                - route53:*
+                - route53domains:*
+                - iam:*
+                - cloudtrail:DeleteTrail
+                - cloudtrail:StopLogging
+                - cloudtrail:UpdateTrail
+                Effect: Allow
+                Resource: '*'
+
+  AdminGroup:
+    Type: AWS::IAM::Group
+    Properties:
+      GroupName: AdminGroup
+      Path: /
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/AdministratorAccess
+        - arn:aws:iam::aws:policy/AWSSupportAccess
+      Policies:
+        - PolicyName: DenyCloudtrailUpdate
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Action:
+                - cloudtrail:UpdateTrail
+                - cloudtrail:DeleteTrail
+                - cloudtrail:Stoplogging
+                Effect: Deny
+                Resource: '*'
+
+  DevGroup:
+    Type: AWS::IAM::Group
+    Properties:
+      GroupName: DevGroup
+      Path: /
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/ReadOnlyAccess
+        - arn:aws:iam::aws:policy/AmazonS3FullAccess
+        - arn:aws:iam::aws:policy/AWSSupportAccess
+      Policies:
+        - PolicyName: ChangePasswordForUser
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action:
+                  - iam:ChangePassword
+                Resource:
+                  - arn:aws:iam::*:user/${aws:username}
+        - PolicyName: DevelopmentAccess
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action:
+                  - ec2:*
+                  - rds:*
+                  - elasticloadbalancing:*
+                  - cloudwatch:*
+                  - autoscaling:*
+                  - iam:PassRole
+                  - iam:ListServerCertificates
+                  - support:*
+                Resource: '*'
+              - Effect: Deny
+                Resource: '*'
+                Action:
+                  - cloudtrail:DeleteTrail
+                  - cloudtrail:StopLogging
+                  - ec2:AcceptVpcPeeringConnection
+                  - ec2:AllocateAddress
+                  - ec2:AssignPrivateIpAddresses
+                  - ec2:AssociateDhcpOptions
+                  - ec2:CreateFlowLogs
+                  - ec2:CreateInternetGateway
+                  - ec2:CreateNatGateway
+                  - ec2:CreateNetworkAcl
+                  - ec2:CreateNetworkAclEntry
+                  - ec2:CreateNetworkInterface
+                  - ec2:CreateRoute
+                  - ec2:CreateRouteTable
+                  - ec2:CreateSecurityGroup
+                  - ec2:CreateSubnet
+                  - ec2:CreateTags
+                  - ec2:CreateVpc
+                  - ec2:CreateVpcEndpoint
+                  - ec2:CreateVpcPeeringConnection
+                  - ec2:CreateVpnConnection
+                  - ec2:CreateVpnConnectionRoute
+                  - ec2:CreateVpnGateway
+                  - ec2:DeleteCustomerGateway
+                  - ec2:DeleteDhcpOptions
+                  - ec2:DeleteFlowLogs
+                  - ec2:DeleteInternetGateway
+                  - ec2:DeleteNatGateway
+                  - ec2:DeleteNetworkAcl
+                  - ec2:DeleteNetworkAclEntry
+                  - ec2:DeleteNetworkInterface
+                  - ec2:DeleteRoute
+                  - ec2:DeleteRouteTable
+                  - ec2:DeleteSecurityGroup
+                  - ec2:DeleteSubnet
+                  - ec2:DeleteTags
+                  - ec2:DeleteVpc
+                  - ec2:DeleteVpcEndpoints
+                  - ec2:DeleteVpcPeeringConnection
+                  - ec2:DeleteVpnConnection
+                  - ec2:DeleteVpnConnectionRoute
+                  - ec2:DeleteVpnGateway
+                  - ec2:DetachClassicLinkVpc
+                  - ec2:DetachInternetGateway
+                  - ec2:DetachNetworkInterface
+                  - ec2:DetachVpnGateway
+                  - ec2:DisableVgwRoutePropagation
+                  - ec2:DisableVpcClassicLink
+                  - ec2:DisassociateAddress
+                  - ec2:DisassociateRouteTable
+                  - ec2:EnableVgwRoutePropagation
+                  - ec2:EnableVpcClassicLink
+                  - ec2:ModifyNetworkInterfaceAttribute
+                  - ec2:ModifySubnetAttribute
+                  - ec2:ModifyVpcAttribute
+                  - ec2:ModifyVpcEndpoint
+                  - ec2:MoveAddressToVpc
+                  - ec2:RejectVpcPeeringConnection
+                  - ec2:ReleaseAddress
+                  - ec2:ReplaceNetworkAclAssociation
+                  - ec2:ReplaceNetworkAclEntry
+                  - ec2:ReplaceRoute
+                  - ec2:ReplaceRouteTableAssociation
+                  - ec2:ResetNetworkInterfaceAttribute
+                  - ec2:RestoreAddressToClassic
+                  - ec2:RevokeSecurityGroupEgress
+                  - ec2:RevokeSecurityGroupIngress
+                  - ec2:UnassignPrivateIpAddresses
+  AuditorGroup:
+    Type: AWS::IAM::Group
+    Properties:
+      GroupName: 'auditor'
+      Path: '/'
+      ManagedPolicyArns:
+       - arn:aws:iam::aws:policy/ReadOnlyAccess
+       - arn:aws:iam::aws:policy/AWSSupportAccess
+
+Outputs:
+  DevGroupName:
+    Value: !Ref DevGroup
+    Export:
+      Name: !Sub ${AWS::StackName}-DevGroupName
+  DevGroupArn:
+    Value: !GetAtt DevGroup.Arn
+    Export:
+      Name: !Sub ${AWS::StackName}-DevGroupArn
+  OpsGroupName:
+    Value: !Ref OpsGroup
+    Export:
+      Name: !Sub ${AWS::StackName}-OpsGroupName
+  OpsGroupArn:
+    Value: !GetAtt OpsGroup.Arn
+    Export:
+      Name: !Sub ${AWS::StackName}-OpsGroupArn
+  AdminGroupName:
+    Value: !Ref AdminGroup
+    Export:
+      Name: !Sub ${AWS::StackName}-AdminGroupName
+  AdminGroupArn:
+    Value: !GetAtt AdminGroup.Arn
+    Export:
+      Name: !Sub ${AWS::StackName}-AdminGroupArn
+  AuditorGroupName:
+    Value: !Ref AuditorGroup
+    Export:
+      Name: !Sub ${AWS::StackName}-AuditorGroupName
+  AuditorGroupArn:
+    Value: !GetAtt AuditorGroup.Arn
+    Export:
+      Name: !Sub ${AWS::StackName}-AuditorGroupArn

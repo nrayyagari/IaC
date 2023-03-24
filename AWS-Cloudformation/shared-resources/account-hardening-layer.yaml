@@ -1,0 +1,50 @@
+---
+AWSTemplateFormatVersion: 2010-09-09
+Description: S3 Bucket for Audit Account - vpcflowlogs
+Metadata:
+  VersionDate: '2017-08-21'
+  Stack: 1
+  Output:
+    Description: Outputs ID of all deployed resources
+
+Resources:
+
+  FlowlogsS3Bucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      AccessControl: BucketOwnerFullControl
+      BucketName:
+        !Sub flowlogs-audit-${AWS::AccountId}
+      AccessControl: BucketOwnerFullControl
+
+  FlowlogsS3BucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket: !Ref FlowlogsS3Bucket
+      PolicyDocument:
+        Statement:
+          - Sid: S3 get bucket acl
+            Effect: Allow
+            Action: s3:GetBucketAcl
+            Principal:
+              Service: !Sub "logs.${AWS::Region}.amazonaws.com"
+            Resource:
+              - !Sub arn:aws:s3:::${FlowlogsS3Bucket}/*
+              - !Sub arn:aws:s3:::${FlowlogsS3Bucket}
+          - Sid: Account Access
+            Effect: Allow
+            Action: s3:PutObject
+            Principal:
+              Service: !Sub "logs.${AWS::Region}.amazonaws.com"
+            Condition:
+              StringEquals:
+                s3:x-amz-acl: "bucket-owner-full-control"
+            Resource:
+              - !Sub arn:aws:s3:::${FlowlogsS3Bucket}/*
+              - !Sub arn:aws:s3:::${FlowlogsS3Bucket}
+
+Outputs:
+  FlowlogsS3BucketName:
+    Value: !Ref FlowlogsS3Bucket
+    Export:
+      Name: !Sub FlowlogsS3Bucket
