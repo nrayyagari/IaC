@@ -1,10 +1,5 @@
-resource "aws_ecr_repository" "api" {
-  name                 = "tt_api"
-  image_tag_mutability = "IMMUTABLE"
-}
-
-resource "aws_ecr_repository" "web" {
-  name                 = "tt_web"
+resource "aws_ecr_repository" "demo" {
+  name                 = "demo"
   image_tag_mutability = "IMMUTABLE"
 }
 
@@ -37,12 +32,7 @@ data "aws_iam_policy_document" "main" {
   }
 }
 
-resource "aws_ecr_repository_policy" "api" {
-  repository = aws_ecr_repository.api.name
-  policy     = data.aws_iam_policy_document.main.json
-}
-
-resource "aws_ecr_repository_policy" "web" {
-  repository = aws_ecr_repository.web.name
+resource "aws_ecr_repository_policy" "demo" {
+  repository = aws_ecr_repository.demo.name
   policy     = data.aws_iam_policy_document.main.json
 }
